@@ -1,0 +1,175 @@
+# Airgradient Pro diy edition
+# LOLIN D1 Mini V4.0.0 with usb c port
+# Optional SGP41 AirGradient TVOC / NOx Module
+
+substitutions:
+  devicename: "airgradient-pro-upstairs"
+  upper_devicename: "AirGradient Pro Up"
+
+esphome:
+  name: "${devicename}"
+  friendly_name: "${upper_devicename}"
+  platform: ESP8266
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_key04
+
+ota:
+  safe_mode: true
+  password: !secret ota_password04
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "${upper_devicename}"
+    password: !secret wifi_hotspot_password
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+captive_portal:
+
+i2c:
+  sda: D2
+  scl: D1
+
+font:
+  - file: "font/monofont.ttf"
+    id: opensans
+    size: 20
+
+display:
+# https://www.winstar.com.tw/products/oled-module/graphic-oled-display/sh1106-oled.html
+  - platform: ssd1306_i2c
+    id: oled
+    address: 0x3c
+    rotation: 0°
+    model: "SH1106 128x64"
+    pages:
+      - id: page1
+        lambda: |-
+          it.printf(0, 0, id(opensans), "CO2: %.0fppm", id(co2).state);
+          it.printf(0, 20, id(opensans), "Temperature: %.0fC", id(temp).state);
+          it.printf(0, 40, id(opensans), "Humidity: %.0f%%RH", id(humidity).state);
+      - id: page2
+        lambda: |-
+          it.printf(0, 0, id(opensans), "VOC: %.0f", id(VOC).state);
+          it.printf(0, 20, id(opensans), "NOx: %.0f", id(NOx).state);
+#          it.printf(0, 40, id(opensans), "HCHO: %.0fug/m3", id(hcho).state);
+      - id: page3
+        lambda: |-
+          it.printf(0, 0, id(opensans), "PM10: %.0fug/m3", id(pm10).state);
+          it.printf(0, 20, id(opensans), "PM25: %.0fug/m3", id(pm25).state);
+          it.printf(0, 40, id(opensans), "PM100: %.0fug/m3", id(pm100).state);
+
+interval:
+  - interval: 10s
+    then:
+      - display.page.show_next: oled
+      - component.update: oled
+
+uart:
+  - rx_pin: D5
+    tx_pin: D6
+    baud_rate: 9600
+    id: uart1
+    
+  - rx_pin: D4
+    tx_pin: D3
+    baud_rate: 9600
+    id: uart2
+
+sensor:
+  # https://sensirion.com/media/documents/213E6A3B/63A5A569/Datasheet_SHT3x_DIS.pdf
+  - platform: sht3xd
+    temperature:
+      id: temp
+      name: Temperature
+      filters:
+        - offset: '-0.5'
+    humidity:
+      id: humidity
+      name: Humidity
+      filters:
+        - offset: '2.7'
+    address: 0x44
+    update_interval: 10s
+
+# https://www.plantower.com/en/products_33/74.html
+# type can be PMSX003, PMS5003S, PMS5003T, PMS5003ST
+# https://esphome.io/components/sensor/pmsx003.html
+  - platform: pmsx003
+    type: PMSX003
+    uart_id: uart1
+# For PMS5003, PMS5003S, PMS5003T, PMS5003ST sensors only:
+    pm_1_0:
+      id: pm10
+      name: "Part. Matter <1.0µm Conc."
+# For all PMSX003 sensors:
+    pm_2_5:
+      id: pm25
+      name: "Part. Matter <2.5µm Conc."
+# For PMS5003, PMS5003S, PMS5003T, PMS5003ST sensors only:
+    pm_10_0:
+      id: pm100
+      name: "Part. Matter <10.0µm Conc."
+# For PMS5003S and PMS5003ST sensors only:
+#    formaldehyde:
+#      id: hcho
+#      name: "Formaldehyde (HCHO) Conc. in µg / m^3"
+
+# What level of PM2.5 is acceptable:
+# PM2.5 refers to atmospheric particulate matter (PM) that have a diameter of less than 2.5 micrometers, which is about 3% the diameter of a human hair.
+# Most studies indicate PM2.5 at or below 12 μg/m3 is considered healthy with little to no risk from exposure.
+# If the level goes to or above 35 μg/m3 during a 24-hour period, the air is considered unhealthy and can cause issues for people with existing breathing issues such as asthma.
+
+# https://senseair.com/products/size-counts/s8-residential/
+# https://www.co2meter.com/products/s8-miniature-co2-sensor-1
+  - platform: senseair
+    uart_id: uart2
+    co2:
+      id: co2
+      name: "SenseAir CO2 Value"
+    update_interval: 60s
+
+# What level of CO2 for indoor air is acceptable:
+# ASHRAE recommends maintaining indoor CO2 levels no greater than 700 ppm above ambient levels (assumed to range between 300 and 500 ppm).
+# High CO2 levels, generally over 1000 ppm, indicate a potential problem with air circulation and fresh air in a room or building.
+
+# https://sensirion.com/products/catalog/SGP41/
+  - platform: sgp4x
+    voc:
+      id: VOC
+      name: "VOC Index"
+    nox:
+      id: NOx
+      name: "NOx Index"
+    compensation:
+      humidity_source: humidity
+      temperature_source: temp
+
+# What level of VOC is acceptable:
+# 0 to 400 ppb: This is the acceptable level of VOC indoors. You should not expect short-term effects such as irritation or discomfort.
+# 400 to 2,200 ppb: Short-term exposure can result in noticeable effects such as headaches, nausea, dizziness, and irritation of the respiratory tract and eyes.
+# Processed output: 0-500 VOC Index   
+# Measurement range (TVOC)  0 - 1000  ppm
+
+# What level of NOx is acceptable:
+# Good (0-50 ppb) No health impacts are expected when air quality is in this range.
+# Moderate (51-100 ppb) Individuals who are unusually sensitive to nitrogen dioxide should consider limiting prolonged outdoor exertion.
+# Processed output: 0-500 NOx Index   
+# Measurement range (NOx) 0 - 1000  ppm
+
+# Measurement range: Ethanol in clean air 0 – 1’000’000 ppb
+# Measurement range: NO2 in clean air 0 – 10’000 ppb
