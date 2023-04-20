@@ -97,12 +97,12 @@ sensor:
       id: temp
       name: Temperature
       filters:
-        - offset: '-0.5'
+        - offset: '0.0'
     humidity:
       id: humidity
       name: Humidity
       filters:
-        - offset: '2.7'
+        - offset: '0.0'
     address: 0x44
     update_interval: 10s
 
