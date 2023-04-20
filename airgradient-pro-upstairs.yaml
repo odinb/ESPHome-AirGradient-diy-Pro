@@ -83,12 +83,12 @@ uart:
   - rx_pin: D5
     tx_pin: D6
     baud_rate: 9600
-    id: uart1
+    id: uart_1
     
   - rx_pin: D4
     tx_pin: D3
     baud_rate: 9600
-    id: uart2
+    id: uart_2
 
 sensor:
   # https://sensirion.com/media/documents/213E6A3B/63A5A569/Datasheet_SHT3x_DIS.pdf
@@ -111,7 +111,7 @@ sensor:
 # https://esphome.io/components/sensor/pmsx003.html
   - platform: pmsx003
     type: PMSX003
-    uart_id: uart1
+    uart_id: uart_1
 # For PMS5003, PMS5003S, PMS5003T, PMS5003ST sensors only:
     pm_1_0:
       id: pm10
@@ -137,7 +137,7 @@ sensor:
 # https://senseair.com/products/size-counts/s8-residential/
 # https://www.co2meter.com/products/s8-miniature-co2-sensor-1
   - platform: senseair
-    uart_id: uart2
+    uart_id: uart_2
     co2:
       id: co2
       name: "SenseAir CO2 Value"
