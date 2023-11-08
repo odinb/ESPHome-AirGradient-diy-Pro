@@ -1,6 +1,7 @@
 # Airgradient Pro diy edition
 # LOLIN D1 Mini V4.0.0 with usb c port
 # Optional SGP41 AirGradient TVOC / NOx Module
+# https://www.airgradient.com/open-airgradient/instructions/diy-pro/
 
 substitutions:
   devicename: "airgradient-pro-downstairs"
