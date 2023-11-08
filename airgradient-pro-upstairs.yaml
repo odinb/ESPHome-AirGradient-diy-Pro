@@ -4,8 +4,8 @@
 # https://www.airgradient.com/open-airgradient/instructions/diy-pro/
 
 substitutions:
-  devicename: "airgradient-pro-downstairs"
-  upper_devicename: "AirGradient Pro Down"
+  devicename: "airgradient-pro"
+  upper_devicename: "AirGradient Pro"
 
 esphome:
   name: "${devicename}"
