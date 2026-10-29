@@ -4,8 +4,8 @@
 # https://www.airgradient.com/open-airgradient/instructions/diy-pro/
 
 substitutions:
-  name: airgradient-pro-upstairs
-  friendly_name: AirGradient Pro Up
+  name: airgradient-pro-downstairs
+  friendly_name: AirGradient Pro Down
 
 esphome:
   name: ${name}
@@ -26,7 +26,7 @@ api:
 # Enable over-the-air updates.
 ota:
   platform: esphome
-  password: !secret ota_password04
+  encryption:
 
 safe_mode:
   disabled: false
@@ -38,8 +38,8 @@ wifi:
   fast_connect: true
   min_auth_mode: WPA2
   networks:
-    - ssid: !secret "wifi_ssid1"
-      password: !secret "wifi_password1"
+    - ssid: !secret "wifi_ssid"
+      password: !secret "wifi_password"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -119,12 +119,12 @@ sensor:
       id: temp
       name: Temperature
       filters:
-        - offset: -0.3
+        - offset: -0.5
     humidity:
       id: humidity
       name: Humidity
       filters:
-        - offset: 0.9
+        - offset: -4.5
     address: 0x44
     update_interval: 10s
 
@@ -171,10 +171,10 @@ sensor:
 
   # https://sensirion.com/products/catalog/SGP41/
   - platform: sgp4x
-    voc:
+    voc_index:
       id: VOC
       name: VOC Index
-    nox:
+    nox_index:
       id: NOx
       name: NOx Index
     compensation:
